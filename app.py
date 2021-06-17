@@ -5,6 +5,7 @@ from typing import List
 '''
 TODO: 
 1. regex validation
+2. add offer for the products that does not exists 
 
 '''
 
@@ -40,7 +41,7 @@ def add_inventory() -> None:
             product_name=product_name,
             product_quantity=product_quantity,
             price_per_quantity=product_price,
-            offer=Offer()
+            offers=Offer(product_id)
         )
 
         for invent in inventory:
@@ -59,7 +60,46 @@ def add_inventory() -> None:
 def sale() -> None:
     print("Please provide details as follows. ")
     sales = input(f'SALE=>{SALES_TEMPLATE}: ').split(';')
-    print("TO BE IMPLEMENTED...")
+    sales_product = []
+    stock_out = False
+    for product in sales:
+        product_id, product_quantity = product.split('|')
+
+        for invent in inventory:
+            if str(invent.product_id) == product_id:
+                if int(product_quantity) <= invent.product_quantity:
+                    print("yes product is available")
+                    offer_id = None
+                    discount_percentage = None
+
+                    if len(invent.offer.offers) != 0:
+                        print("there are some offers")
+                        print(invent.offer.offers)
+
+                    net = invent.price_per_quantity * int(product_quantity)
+
+                    sales_product.append(
+                        {
+                            "product_id": invent.product_id,
+                            "product_name": invent.product_name,
+                            "quantity_purchased": product_quantity,
+                            "product_price": invent.price_per_quantity,
+                            "offer_id": offer_id,
+                            "net": net
+                        }
+                    )
+                    invent.product_quantity = invent.product_quantity - int(product_quantity)
+                else:
+                    print(f'Product with product id {product_id} is not in stock')
+                    stock_out = True
+                    break
+        if stock_out:
+            break
+    else:
+        print("order successful")
+        print('== Bill ==')
+        for product in sales:
+            print(product)
 
 
 def stock_check() -> None:
@@ -85,6 +125,7 @@ def add_new_offer() -> None:
     discount_percent = offer_details[4]
 
     new_offer = {
+        "product_id": product_id,
         "offer_id": offer_id,
         "offer_name": offer_name,
         "minimum_quantity": minimum_quantity,
@@ -92,7 +133,7 @@ def add_new_offer() -> None:
     }
 
     for invent in inventory:
-        if invent.product_id == product_id:
+        if str(invent.product_id) == product_id:
             invent.offer.add_offer(new_offer)
             break
     else:
@@ -121,7 +162,6 @@ def menu() -> None:
             print("Unknown Input, Please select a valid option")
 
         selection = input(MENU_PROMPT)
-
 
 
 menu()
